@@ -1,49 +1,45 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
+import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const [sessionStatus, setSessionStatus] = useState("idle");
+  const [configLoaded, setConfigLoaded] = useState(false);
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  useEffect(() => {
+    // Verificar que la configuración se puede leer desde el backend
+    invoke("get_config")
+      .then((config) => {
+        console.log("Configuración cargada:", config);
+        setConfigLoaded(true);
+      })
+      .catch((err) => {
+        console.error("Error al cargar configuración:", err);
+      });
+  }, []);
 
   return (
     <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className="status-bar">
+        <span>Estado: {sessionStatus}</span>
+        {configLoaded ? (
+          <span style={{ color: 'green' }}> ● Config OK</span>
+        ) : (
+          <span style={{ color: 'red' }}> ● Config Error</span>
+        )}
       </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
 
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
+      <div className="waveform-placeholder">
+        {/* WaveformCanvas irá aquí en el Sprint 2 */}
+        <div style={{ height: '60px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}></div>
+      </div>
+
+      <div className="controls">
+        {/* RecordButton irá aquí en el Sprint 2 */}
+        <button disabled={!configLoaded}>
+          Record
+        </button>
+      </div>
     </main>
   );
 }
