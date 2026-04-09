@@ -8,8 +8,10 @@ use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 use tokio_tungstenite::{
-    connect_async,
+    connect_async_tls_with_config,
+    tungstenite::client::IntoClientRequest,
     tungstenite::protocol::Message,
+    Connector,
 };
 use url::Url;
 use tauri::{AppHandle, Emitter};
@@ -22,8 +24,11 @@ pub struct SttData {
 
 #[derive(Deserialize)]
 struct DeepgramResponse {
-    channel: DeepgramChannel,
+    channel: Option<DeepgramChannel>,
+    #[serde(default)]
     is_final: bool,
+    // Soporte para formato plano (modelos Flux / V2)
+    transcript: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -47,24 +52,35 @@ impl SttClient {
         let lang = config.language.clone();
         let model = config.model_stt.clone();
 
-        // Construcción de la URL de Deepgram
-        let url_str = format!(
-            "wss://api.deepgram.com/v1/listen?model={}&language={}&smart_format=true&interim_results=true&encoding=linear16&sample_rate=16000",
-            model, lang
-        );
-        let url = Url::parse(&url_str)?;
+        // Construcción robusta de la URL de Deepgram
+        let mut url = Url::parse("wss://api.deepgram.com/v1/listen")?;
+        {
+            let mut query = url.query_pairs_mut();
+            query.append_pair("model", &model);
+            
+            // Solo añadir lenguaje si no es un modelo específico de inglés (como flux-general-en)
+            if !model.ends_with("-en") {
+                query.append_pair("language", &lang);
+            }
+            
+            query.append_pair("smart_format", "true");
+            query.append_pair("interim_results", "true");
+            query.append_pair("encoding", "linear16");
+            query.append_pair("sample_rate", "16000");
+        }
 
         let (tx, mut rx) = mpsc::channel::<Vec<u8>>(100);
 
         // Hilo asíncrono para el WebSocket
         tauri::async_runtime::spawn(async move {
-            let request = http::Request::builder()
-                .uri(url.as_str())
-                .header("Authorization", format!("Token {}", api_key))
-                .body(())
-                .unwrap();
+            // Usar IntoClientRequest para que tungstenite gestione los headers del handshake
+            let mut request = url.as_str().into_client_request().unwrap();
+            request.headers_mut().insert(
+                "Authorization",
+                format!("Token {}", api_key).parse().unwrap(),
+            );
 
-            let (ws_stream, _) = match connect_async(request).await {
+            let (ws_stream, _) = match connect_async_tls_with_config(request, None, true, None).await {
                 Ok(v) => v,
                 Err(e) => {
                     eprintln!("Error al conectar con Deepgram STT: {}", e);
@@ -91,10 +107,18 @@ impl SttClient {
                 while let Some(msg) = read.next().await {
                     if let Ok(Message::Text(text)) = msg {
                         if let Ok(resp) = serde_json::from_str::<DeepgramResponse>(&text) {
-                            if let Some(alt) = resp.channel.alternatives.get(0) {
-                                if !alt.transcript.is_empty() {
+                            // Intentar extraer de 'transcript' (formato Flux)
+                            let transcript_text = if let Some(t) = resp.transcript {
+                                Some(t)
+                            } else {
+                                // Intentar extraer de 'channel' (formato estándar)
+                                resp.channel.and_then(|c| c.alternatives.get(0).map(|a| a.transcript.clone()))
+                            };
+
+                            if let Some(txt) = transcript_text {
+                                if !txt.is_empty() {
                                     let data = SttData {
-                                        text: alt.transcript.clone(),
+                                        text: txt,
                                         is_final: resp.is_final,
                                     };
                                     let _ = app_handle_clone.emit("stt_data", &data);
