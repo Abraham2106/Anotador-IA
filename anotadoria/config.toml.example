@@ -1,0 +1,7 @@
+vault_path = "/path/to/your/obsidian/vault"
+deepgram_api_key = "dg-xxxxxxxxxx"
+claude_api_key = "sk-ant-xxxxxxxxxx"
+language = "es"
+model_stt = "nova-3-general"
+model_llm = "claude-3-5-sonnet-20240620"
+note_subfolder = "AnotadorIA"
