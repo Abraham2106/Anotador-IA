@@ -6,8 +6,7 @@
 use crate::config::AppConfig;
 use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::mpsc;
 use tokio_tungstenite::{
     connect_async,
     tungstenite::protocol::Message,
@@ -68,7 +67,7 @@ impl SttClient {
             let (ws_stream, _) = match connect_async(request).await {
                 Ok(v) => v,
                 Err(e) => {
-                    eprintln!("Error al conectar con Deepgram: {}", e);
+                    eprintln!("Error al conectar con Deepgram STT: {}", e);
                     return;
                 }
             };
@@ -78,12 +77,12 @@ impl SttClient {
             // Task 1: Enviar audio
             let send_task = tokio::spawn(async move {
                 while let Some(audio) = rx.recv().await {
-                    if write.send(Message::Binary(audio)).await.is_err() {
+                    if write.send(Message::Binary(audio.into())).await.is_err() {
                         break;
                     }
                 }
-                // Enviar mensaje de cierre a Deepgram
-                let _ = write.send(Message::Binary(vec![])).await;
+                // Enviar mensaje de cierre (Empty Binary Message)
+                let _ = write.send(Message::Binary(vec![].into())).await;
             });
 
             // Task 2: Recibir transcripciones
@@ -110,10 +109,6 @@ impl SttClient {
         });
 
         Ok(SttClient { tx })
-    }
-
-    pub async fn send_audio(&self, audio: Vec<u8>) {
-        let _ = self.tx.send(audio).await;
     }
 
     pub fn clone_tx(&self) -> mpsc::Sender<Vec<u8>> {

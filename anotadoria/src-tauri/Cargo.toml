@@ -30,4 +30,5 @@ tokio-tungstenite = "0.26"
 futures-util = "0.3"
 url = "2.5"
 http = "1.1"
+tokio = { version = "1.43", features = ["full"] }
 
