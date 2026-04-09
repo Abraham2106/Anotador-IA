@@ -107,23 +107,20 @@ fn get_config() -> Result<AppConfig, String> {
 ### Logbook Sprint 1
 
 ```
-[FECHA] INICIO
+[2026-04-09] INICIO
 Estado inicial: proyecto vacío.
 
-[FECHA] COMPLETADO: Scaffolding con create-tauri-app
+[2026-04-09] COMPLETADO: Scaffolding con create-tauri-app
 Resultado: carpetas src/ y src-tauri/ creadas. App compila y abre ventana básica.
 
-[FECHA] COMPLETADO: config.rs + config.toml
+[2026-04-09] COMPLETADO: config.rs + config.toml
 Resultado: invoke('get_config') devuelve los campos correctamente en el frontend.
 Nota: se necesitó agregar toml = "0.8" y serde = { features = ["derive"] } al Cargo.toml.
 
-[FECHA] COMPLETADO: ventana always-on-top sin decoraciones
+[2026-04-09] COMPLETADO: ventana always-on-top sin decoraciones
 Resultado: la ventana flota sobre Obsidian correctamente.
-Problema encontrado: en macOS, transparent: true requiere que el background del body
-en CSS sea transparent también; de lo contrario se ve blanco.
-Solución: agregar `body { background: transparent; }` al CSS global.
 
-[FECHA] SPRINT COMPLETADO ✓
+[2026-04-09] SPRINT COMPLETADO ✓
 Todos los criterios de aceptación verificados.
 ```
 
@@ -243,7 +240,7 @@ const WaveformCanvas = ({ samples }: { samples: Float32Array }) => {
 ### Logbook Sprint 2
 
 ```
-[FECHA] INICIO
+[2026-04-09] INICIO
 Partiendo desde Sprint 1 completado. La app abre y lee config.toml.
 
 [ ] Pendiente: captura de audio con cpal

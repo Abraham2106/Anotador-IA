@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useSession } from "./hooks/useSession";
+import WaveformCanvas from "./components/WaveformCanvas";
 import "./App.css";
 
 function App() {
-  const [sessionStatus, setSessionStatus] = useState("idle");
+  const { sessionStatus, waveform } = useSession();
   const [configLoaded, setConfigLoaded] = useState(false);
 
   useEffect(() => {
-    // Verificar que la configuración se puede leer desde el backend
     invoke("get_config")
       .then((config) => {
         console.log("Configuración cargada:", config);
@@ -18,26 +19,34 @@ function App() {
       });
   }, []);
 
+  const handleToggleRecording = () => {
+    if (sessionStatus === 'idle') {
+      invoke('start_recording').catch(console.error);
+    } else if (sessionStatus === 'recording') {
+      invoke('stop_recording').catch(console.error);
+    }
+  };
+
   return (
     <main className="container">
       <div className="status-bar">
-        <span>Estado: {sessionStatus}</span>
-        {configLoaded ? (
-          <span style={{ color: 'green' }}> ● Config OK</span>
-        ) : (
-          <span style={{ color: 'red' }}> ● Config Error</span>
-        )}
+        <span className="state-pill">
+          {sessionStatus === 'recording' ? '● GRABANDO' : '● LISTO'}
+        </span>
+        {!configLoaded && <span style={{ color: '#ef4444' }}> (Error Config)</span>}
       </div>
 
-      <div className="waveform-placeholder">
-        {/* WaveformCanvas irá aquí en el Sprint 2 */}
-        <div style={{ height: '60px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}></div>
+      <div className="waveform-wrapper">
+        <WaveformCanvas data={waveform} />
       </div>
 
       <div className="controls">
-        {/* RecordButton irá aquí en el Sprint 2 */}
-        <button disabled={!configLoaded}>
-          Record
+        <button 
+          onClick={handleToggleRecording} 
+          disabled={!configLoaded}
+          className={`record-btn ${sessionStatus === 'recording' ? 'active' : ''}`}
+        >
+          <div className="inner-circle"></div>
         </button>
       </div>
     </main>

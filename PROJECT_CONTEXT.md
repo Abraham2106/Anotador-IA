@@ -134,6 +134,19 @@ Razón: Ver decisión de Tauri arriba. Adicionalmente, el overhead de RAM de Ele
 Razón: Requeriría que el usuario instale un plugin, aprender la API de plugins de
 Obsidian, y manejar compatibilidad entre versiones. La escritura directa al filesystem
 es más simple y más robusta para uso personal.
+
+---
+
+### 2026-04 — Fase de Implementación
+
+[2026-04-09] DECISION  LLM: gemini-proxy-balancer sobre Claude directo
+Razón: Evitar rate limits de la API gratuita de Gemini mediante rotación de keys y
+cooldowns automáticos. Permite costo $0 para uso personal con alta disponibilidad.
+Impacto: `config.rs`, `llm_agents.rs`, `config.toml`.
+
+[2026-04-09] CAMBIO  Scaffolding inicial y Configuración
+Razón: Inicio del desarrollo físico del proyecto con Tauri v2 y React-TS.
+Impacto: Toda la estructura de carpetas y el bridge inicial de comandos.
 ```
 
 ---
