@@ -14,12 +14,12 @@
       {
         "label": "main",
         "title": "AnotadorIA",
-        "width": 320,
-        "height": 300,
+        "width": 1000,
+        "height": 800,
         "alwaysOnTop": true,
-        "decorations": false,
-        "resizable": false,
-        "transparent": true
+        "decorations": true,
+        "resizable": true,
+        "transparent": false
       }
     ],
     "security": {
