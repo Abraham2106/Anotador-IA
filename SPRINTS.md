@@ -424,24 +424,27 @@ Partiendo desde Sprint 3 completado. STT conectado y emitiendo eventos.
 ## Sprint 5 — Agentes LLM — Limpieza y Resumen
 
 **Objetivo:** Al detener la grabación, el texto completo pasa por dos agentes
-secuenciales. El resultado se agrega al `.md` como bloque `## Resumen`.
+secenciales a través del proxy local `gemini-proxy-balancer`. El resultado se
+agrega al `.md` como bloque `## Resumen`.
 
 **Duración:** Semana 5
 
 ### Tareas
 
-- [ ] Crear `llm_agents.rs` con funciones `clean_transcript()` y `generate_summary()`
-- [ ] Crear `prompt_templates.rs` con los prompts como constantes Rust
+- [ ] Implementar cliente HTTP OpenAI-compatible en `llm_agents.rs` (ya stubeado)
+- [ ] Configurar prompts detallados en `prompt_templates.rs` (ya stubeado)
 - [ ] Integrar en `session_manager.rs`: on_stop → clean → summarize → append
+- [ ] Implementar lógica de fallback: si el proxy falla, conservar el texto raw
 - [ ] Emitir evento `processing_status` a la UI durante el procesamiento
 - [ ] Mostrar spinner en la UI mientras los agentes trabajan
 
 ### Criterios de aceptación
 
 - Al detener, la UI muestra estado "Procesando..."
+- Si el proxy está offline, se emite un warning pero se guarda el texto raw
 - El `.md` final contiene la transcripción limpia + bloque `## Resumen`
 - El resumen tiene action items en formato `- [ ] Acción concreta`
-- El tiempo total de post-procesamiento es < 30 segundos para sesiones de 30 min
+- El tiempo total de post-procesamiento es < 30 segundos usando Gemini Flash
 
 ### Prompts de los agentes
 

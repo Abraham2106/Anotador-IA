@@ -10,10 +10,14 @@ use std::fs;
 pub struct AppConfig {
     pub vault_path: String,
     pub deepgram_api_key: String,
-    pub claude_api_key: String,
     pub language: String,
     pub model_stt: String,
-    pub model_llm: String,
+
+    // LLM via proxy — sin API key en la app
+    pub llm_proxy_url: String,
+    pub llm_model: String,
+    pub llm_timeout_secs: Option<u64>,
+
     pub note_subfolder: Option<String>,
 }
 
