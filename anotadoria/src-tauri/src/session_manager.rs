@@ -39,36 +39,37 @@ impl SessionManager {
             return Err("Ya hay una sesión de grabación activa".into());
         }
 
-        // Cargar config fresca para STT
+        // Cargar config fresca
         let config = load_config().map_err(|e| e.to_string())?;
-
-        // Inicializar STT Client
-        let stt_client = SttClient::start(&config, app_handle.clone())
-            .map_err(|e| format!("Error iniciando STT: {}", e))?;
 
         let state_clone = Arc::clone(&self.state);
         let app_handle_clone = app_handle.clone();
         
-        // El Sender para enviar audio al hilo de STT
-        let stt_tx = stt_client.clone_tx(); 
-
-        let handle = AudioCapture::start(move |samples| {
-            let now = Instant::now();
-            
-            // 1. Pipeline de Waveform (Downsampled f32)
-            if let Ok(mut s) = state_clone.try_lock() {
-                if s.last_emit.elapsed().as_millis() > 16 {
-                    let frame = waveform_analyzer::analyze(&samples, 64);
-                    let _ = app_handle_clone.emit("waveform_data", &frame);
-                    s.last_emit = now;
+        // 1. Iniciar AudioCapture PRIMERO para obtener el sample_rate real
+        let (handle, sample_rate) = AudioCapture::start({
+            let app_handle_inner = app_handle.clone();
+            let state_inner = Arc::clone(&self.state);
+            move |samples| {
+                let now = Instant::now();
+                if let Ok(mut s) = state_inner.try_lock() {
+                    // Pipeline de Waveform
+                    if s.last_emit.elapsed().as_millis() > 16 {
+                        let frame = waveform_analyzer::analyze(&samples, 64);
+                        let _ = app_handle_inner.emit("waveform_data", &frame);
+                        s.last_emit = now;
+                    }
+                    // Pipeline de STT
+                    if let Some(stt) = &s.stt_client {
+                        let pcm_data = f32_to_i16_pcm(&samples);
+                        let _ = stt.clone_tx().try_send(pcm_data);
+                    }
                 }
             }
-
-            // 2. Pipeline de STT (f32 -> i16 Linear16)
-            let pcm_data = f32_to_i16_pcm(&samples);
-            let _ = stt_tx.try_send(pcm_data);
-
         }).map_err(|e| e.to_string())?;
+
+        // 2. Iniciar STT Client con el sample_rate real detectado
+        let stt_client = SttClient::start(&config, app_handle.clone(), sample_rate)
+            .map_err(|e| format!("Error iniciando STT: {}", e))?;
 
         state.audio_handle = Some(handle);
         state.stt_client = Some(stt_client);

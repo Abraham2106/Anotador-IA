@@ -20,8 +20,8 @@ impl AudioHandle {
 pub struct AudioCapture;
 
 impl AudioCapture {
-    /// Inicia la captura de audio en un hilo dedicado para evitar problemas de Send/Sync.
-    pub fn start<F>(callback: F) -> Result<AudioHandle, Box<dyn std::error::Error>>
+    /// Inicia la captura de audio en un hilo dedicado. Devuelve el handle y el sample_rate detectado.
+    pub fn start<F>(callback: F) -> Result<(AudioHandle, u32), Box<dyn std::error::Error>>
     where
         F: Fn(Vec<f32>) + Send + 'static,
     {
@@ -30,6 +30,7 @@ impl AudioCapture {
             .ok_or("No se encontró dispositivo de entrada por defecto")?;
         
         let config = device.default_input_config()?;
+        let sample_rate = config.sample_rate().0;
         let sample_format = config.sample_format();
         let config_stream: cpal::StreamConfig = config.into();
 
@@ -54,6 +55,6 @@ impl AudioCapture {
             drop(stream);
         });
 
-        Ok(AudioHandle { stop_tx })
+        Ok((AudioHandle { stop_tx }, sample_rate))
     }
 }
