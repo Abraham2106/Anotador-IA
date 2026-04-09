@@ -45,8 +45,8 @@ impl SessionManager {
         let state_clone = Arc::clone(&self.state);
         let app_handle_clone = app_handle.clone();
         
-        // 1. Iniciar AudioCapture PRIMERO para obtener el sample_rate real
-        let (handle, sample_rate) = AudioCapture::start({
+        // 1. Iniciar AudioCapture PRIMERO para obtener el sample_rate y canales reales
+        let (handle, sample_rate, channels) = AudioCapture::start({
             let app_handle_inner = app_handle.clone();
             let state_inner = Arc::clone(&self.state);
             move |samples| {
@@ -67,8 +67,8 @@ impl SessionManager {
             }
         }).map_err(|e| e.to_string())?;
 
-        // 2. Iniciar STT Client con el sample_rate real detectado
-        let stt_client = SttClient::start(&config, app_handle.clone(), sample_rate)
+        // 2. Iniciar STT Client con parámetros reales
+        let stt_client = SttClient::start(&config, app_handle.clone(), sample_rate, channels)
             .map_err(|e| format!("Error iniciando STT: {}", e))?;
 
         state.audio_handle = Some(handle);

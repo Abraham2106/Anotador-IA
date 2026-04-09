@@ -48,6 +48,7 @@ export const useSession = () => {
     // Escuchar datos de STT
     const unlistenStt = listen<SttData>('stt_data', (event) => {
         const { text, is_final } = event.payload;
+        console.log("Evento STT recibido:", event.payload);
         if (is_final) {
             setStableTranscript(prev => prev + " " + text);
             setInterimTranscript("");

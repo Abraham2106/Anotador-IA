@@ -73,8 +73,10 @@ body {
   font-size: 13px;
   line-height: 1.4;
   text-align: center;
-  mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
   scrollbar-width: none;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 4px;
 }
 .transcript-container::-webkit-scrollbar { display: none; }
 

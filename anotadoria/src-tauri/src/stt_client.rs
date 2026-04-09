@@ -47,7 +47,7 @@ pub struct SttClient {
 
 impl SttClient {
     /// Inicia el cliente STT. Devuelve un Sender para enviar chunks de audio.
-    pub fn start(config: &AppConfig, app_handle: AppHandle, sample_rate: u32) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn start(config: &AppConfig, app_handle: AppHandle, sample_rate: u32, channels: u16) -> Result<Self, Box<dyn std::error::Error>> {
         let api_key = config.deepgram_api_key.clone();
         let lang = config.language.clone();
         let model = config.model_stt.clone();
@@ -67,6 +67,7 @@ impl SttClient {
             query.append_pair("interim_results", "true");
             query.append_pair("encoding", "linear16");
             query.append_pair("sample_rate", &sample_rate.to_string());
+            query.append_pair("channels", &channels.to_string());
         }
 
         let (tx, mut rx) = mpsc::channel::<Vec<u8>>(100);
@@ -117,6 +118,7 @@ impl SttClient {
 
                             if let Some(txt) = transcript_text {
                                 if !txt.is_empty() {
+                                    eprintln!("Transcripción recibida: {} (final: {})", txt, resp.is_final);
                                     let data = SttData {
                                         text: txt,
                                         is_final: resp.is_final,

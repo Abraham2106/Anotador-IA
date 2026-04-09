@@ -20,8 +20,8 @@ impl AudioHandle {
 pub struct AudioCapture;
 
 impl AudioCapture {
-    /// Inicia la captura de audio en un hilo dedicado. Devuelve el handle y el sample_rate detectado.
-    pub fn start<F>(callback: F) -> Result<(AudioHandle, u32), Box<dyn std::error::Error>>
+    /// Inicia la captura de audio en un hilo dedicado. Devuelve el handle, sample_rate y canales.
+    pub fn start<F>(callback: F) -> Result<(AudioHandle, u32, u16), Box<dyn std::error::Error>>
     where
         F: Fn(Vec<f32>) + Send + 'static,
     {
@@ -31,6 +31,7 @@ impl AudioCapture {
         
         let config = device.default_input_config()?;
         let sample_rate = config.sample_rate().0;
+        let channels = config.channels();
         let sample_format = config.sample_format();
         let config_stream: cpal::StreamConfig = config.into();
 
@@ -55,6 +56,6 @@ impl AudioCapture {
             drop(stream);
         });
 
-        Ok((AudioHandle { stop_tx }, sample_rate))
+        Ok((AudioHandle { stop_tx }, sample_rate, channels))
     }
 }
