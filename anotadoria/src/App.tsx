@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useSession } from "./hooks/useSession";
 import WaveformCanvas from "./components/WaveformCanvas";
+import TranscriptDisplay from "./components/TranscriptDisplay";
 import "./App.css";
 
 function App() {
-  const { sessionStatus, waveform } = useSession();
+  const { sessionStatus, waveform, stableTranscript, interimTranscript } = useSession();
   const [configLoaded, setConfigLoaded] = useState(false);
 
   useEffect(() => {
@@ -36,19 +37,32 @@ function App() {
         {!configLoaded && <span className="state-pill error">● CONFIG ERROR</span>}
       </div>
 
-      <div className="waveform-wrapper">
-        <WaveformCanvas data={waveform} />
+      <div className="main-content">
+        {sessionStatus === 'recording' || stableTranscript ? (
+            <TranscriptDisplay stable={stableTranscript} interim={interimTranscript} />
+        ) : (
+            <div className="welcome-area">
+                <span className="welcome-text">AnotadorIA</span>
+                <span className="subtitle">Listo para escuchar</span>
+            </div>
+        )}
       </div>
 
-      <div className="controls">
-        <button 
-          onClick={handleToggleRecording} 
-          disabled={!configLoaded}
-          className={`record-btn ${sessionStatus === 'recording' ? 'active' : ''}`}
-          title={sessionStatus === 'recording' ? 'Stop Recording' : 'Start Recording'}
-        >
-          <div className="inner-circle"></div>
-        </button>
+      <div className="bottom-area">
+          <div className="waveform-mini">
+            <WaveformCanvas data={waveform} />
+          </div>
+          
+          <div className="controls">
+            <button 
+              onClick={handleToggleRecording} 
+              disabled={!configLoaded}
+              className={`record-btn ${sessionStatus === 'recording' ? 'active' : ''}`}
+              title={sessionStatus === 'recording' ? 'Stop Recording' : 'Start Recording'}
+            >
+              <div className="inner-circle"></div>
+            </button>
+          </div>
       </div>
     </main>
   );
