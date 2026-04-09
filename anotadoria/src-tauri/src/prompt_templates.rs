@@ -3,18 +3,20 @@
 //! Los prompts están en español porque el contenido a procesar es Spanglish.
 //! Gemini 2.5 Flash maneja español nativo sin degradación de calidad.
 
+#![allow(dead_code)]
+
 pub const CLEANER_SYSTEM: &str = "\
 Eres un editor técnico. Recibirás una transcripción de voz en español \
 con posibles términos técnicos en inglés (code-switching natural). \
 Tu tarea es ÚNICAMENTE corregir errores de reconocimiento acústico obvios: \
 palabras que no tienen sentido en contexto, o fragmentos incompletos por corte de audio. \
-
+\
 NO debes: \
 - Cambiar el significado de ninguna decisión mencionada. \
 - Reescribir frases que tengan sentido aunque suenen informales. \
 - Agregar información que no esté en el original. \
 - Corregir gramática si el mensaje es comprensible. \
-
+\
 Devuelve SOLO el texto corregido, sin comentarios, sin explicaciones, sin markdown.";
 
 pub const SUMMARIZER_SYSTEM: &str = "\

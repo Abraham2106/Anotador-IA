@@ -30,10 +30,10 @@ function App() {
   return (
     <main className="container">
       <div className="status-bar">
-        <span className="state-pill">
-          {sessionStatus === 'recording' ? '● GRABANDO' : '● LISTO'}
+        <span className={`state-pill ${sessionStatus === 'recording' ? 'recording' : ''}`}>
+          {sessionStatus === 'recording' ? '● RECORDING' : '● READY'}
         </span>
-        {!configLoaded && <span style={{ color: '#ef4444' }}> (Error Config)</span>}
+        {!configLoaded && <span className="state-pill error">● CONFIG ERROR</span>}
       </div>
 
       <div className="waveform-wrapper">
@@ -45,6 +45,7 @@ function App() {
           onClick={handleToggleRecording} 
           disabled={!configLoaded}
           className={`record-btn ${sessionStatus === 'recording' ? 'active' : ''}`}
+          title={sessionStatus === 'recording' ? 'Stop Recording' : 'Start Recording'}
         >
           <div className="inner-circle"></div>
         </button>

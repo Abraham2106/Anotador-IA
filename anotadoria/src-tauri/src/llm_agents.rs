@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 //! llm_agents.rs
 //!
 //! Responsabilidad: ejecutar los dos agentes LLM secuenciales al finalizar
