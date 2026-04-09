@@ -29,7 +29,7 @@ function App() {
   };
 
   return (
-    <main className="container">
+    <main className={`container ${sessionStatus === 'recording' ? 'recording' : ''}`}>
       <div className="status-bar">
         <span className={`state-pill ${sessionStatus === 'recording' ? 'recording' : ''}`}>
           {sessionStatus === 'recording' ? '● RECORDING' : '● READY'}
@@ -48,16 +48,18 @@ function App() {
         )}
 
         <div className="recorder-section">
-            <WaveformCanvas data={waveform} />
+            <div className="waveform-wrap">
+                <WaveformCanvas data={waveform} />
+            </div>
             
             <div className="controls">
                 <button 
-                onClick={handleToggleRecording} 
-                disabled={!configLoaded}
-                className={`record-btn ${sessionStatus === 'recording' ? 'active' : ''}`}
-                title={sessionStatus === 'recording' ? 'Stop Recording' : 'Start Recording'}
+                  onClick={handleToggleRecording} 
+                  disabled={!configLoaded}
+                  className={`record-btn ${sessionStatus === 'recording' ? 'active' : ''}`}
+                  title={sessionStatus === 'recording' ? 'Stop Recording' : 'Start Recording'}
                 >
-                <div className="inner-circle"></div>
+                  <div className="inner-circle"></div>
                 </button>
             </div>
         </div>
