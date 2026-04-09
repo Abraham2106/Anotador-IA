@@ -1,23 +1,27 @@
 //! # audio_capture
 //!
-//! Responsabilidad: abrir el stream de audio del micrófono por defecto usando cpal
-//! y emitir frames PCM f32 a través de un callback.
-//!
-//! NO hace: análisis de señal, transcripción, escritura de archivos.
+//! Responsabilidad: abrir el stream de audio del micrófono por defecto usando cpal.
+//! Para compatibilidad con Windows, el stream se maneja en un hilo dedicado.
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use std::sync::{Arc, Mutex};
+use std::sync::mpsc;
+use std::thread;
 
-pub struct AudioCapture {
-    stream: cpal::Stream,
+pub struct AudioHandle {
+    stop_tx: mpsc::Sender<()>,
 }
 
+impl AudioHandle {
+    pub fn stop(self) {
+        let _ = self.stop_tx.send(());
+    }
+}
+
+pub struct AudioCapture;
+
 impl AudioCapture {
-    /// Inicia la captura de audio en un hilo separado.
-    /// 
-    /// # Arguments
-    /// * `callback` - Función que recibe un buffer de muestras f32 promediadas o crudas.
-    pub fn start<F>(callback: F) -> Result<Self, Box<dyn std::error::Error>>
+    /// Inicia la captura de audio en un hilo dedicado para evitar problemas de Send/Sync.
+    pub fn start<F>(callback: F) -> Result<AudioHandle, Box<dyn std::error::Error>>
     where
         F: Fn(Vec<f32>) + Send + 'static,
     {
@@ -29,29 +33,27 @@ impl AudioCapture {
         let sample_format = config.sample_format();
         let config_stream: cpal::StreamConfig = config.into();
 
-        let callback = Arc::new(Mutex::new(callback));
+        let (stop_tx, stop_rx) = mpsc::channel();
 
-        let stream = match sample_format {
-            cpal::SampleFormat::F32 => device.build_input_stream(
-                &config_stream,
-                move |data: &[f32], _| {
-                    if let Ok(cb) = callback.lock() {
-                        cb(data.to_vec());
-                    }
-                },
-                |err| eprintln!("Error en stream de audio: {}", err),
-                None
-            )?,
-            _ => return Err("Formato de audio no soportado (solo f32)".into()),
-        };
+        thread::spawn(move || {
+            let stream = match sample_format {
+                cpal::SampleFormat::F32 => device.build_input_stream(
+                    &config_stream,
+                    move |data: &[f32], _| callback(data.to_vec()),
+                    |err| eprintln!("Error en stream de audio: {}", err),
+                    None
+                ).expect("No se pudo construir el stream"),
+                _ => panic!("Formato de audio no soportado"),
+            };
 
-        stream.play()?;
+            stream.play().expect("No se pudo iniciar el stream");
 
-        Ok(AudioCapture { stream })
-    }
+            // El hilo se mantiene vivo hasta recibir señal de parada
+            let _ = stop_rx.recv();
+            let _ = stream.pause();
+            drop(stream);
+        });
 
-    /// Detiene el stream de audio (se llama automáticamente al soltar la struct).
-    pub fn stop(&self) {
-        let _ = self.stream.pause();
+        Ok(AudioHandle { stop_tx })
     }
 }

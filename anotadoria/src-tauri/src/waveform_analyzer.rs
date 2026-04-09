@@ -43,7 +43,7 @@ pub fn analyze(samples: &[f32], target_bins: usize) -> WaveformFrame {
     if bin_size > 0 {
         for chunk in samples.chunks(bin_size) {
             if downsampled.len() >= target_bins { break; }
-            let max_abs = chunk.iter().fold(0.0, |max, &s| max.max(s.abs()));
+            let max_abs = chunk.iter().fold(0.0f32, |max, &s| max.max(s.abs()));
             downsampled.push(max_abs);
         }
     }
