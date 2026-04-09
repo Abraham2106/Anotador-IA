@@ -57,7 +57,7 @@ impl SttClient {
         let (tx, mut rx) = mpsc::channel::<Vec<u8>>(100);
 
         // Hilo asíncrono para el WebSocket
-        tokio::spawn(async move {
+        tauri::async_runtime::spawn(async move {
             let request = http::Request::builder()
                 .uri(url.as_str())
                 .header("Authorization", format!("Token {}", api_key))
@@ -75,19 +75,19 @@ impl SttClient {
             let (mut write, mut read) = ws_stream.split();
 
             // Task 1: Enviar audio
-            let send_task = tokio::spawn(async move {
+            let send_task = tauri::async_runtime::spawn(async move {
                 while let Some(audio) = rx.recv().await {
                     if write.send(Message::Binary(audio.into())).await.is_err() {
                         break;
                     }
                 }
-                // Enviar mensaje de cierre (Empty Binary Message)
+                // Enviar mensaje de cierre
                 let _ = write.send(Message::Binary(vec![].into())).await;
             });
 
             // Task 2: Recibir transcripciones
             let app_handle_clone = app_handle.clone();
-            let receive_task = tokio::spawn(async move {
+            let receive_task = tauri::async_runtime::spawn(async move {
                 while let Some(msg) = read.next().await {
                     if let Ok(Message::Text(text)) = msg {
                         if let Ok(resp) = serde_json::from_str::<DeepgramResponse>(&text) {
@@ -105,7 +105,7 @@ impl SttClient {
                 }
             });
 
-            let _ = tokio::join!(send_task, receive_task);
+            let _ = futures_util::future::join(send_task, receive_task).await;
         });
 
         Ok(SttClient { tx })

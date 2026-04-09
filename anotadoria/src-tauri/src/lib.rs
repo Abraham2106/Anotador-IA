@@ -20,13 +20,13 @@ fn get_config() -> Result<AppConfig, String> {
 }
 
 #[tauri::command]
-fn start_recording(app: AppHandle, manager: State<'_, SessionManager>) -> Result<(), String> {
-    manager.start_recording(app)
+async fn start_recording(app: AppHandle, manager: State<'_, SessionManager>) -> Result<(), String> {
+    manager.start_recording(app).await
 }
 
 #[tauri::command]
-fn stop_recording(app: AppHandle, manager: State<'_, SessionManager>) -> Result<(), String> {
-    manager.stop_recording(app)
+async fn stop_recording(app: AppHandle, manager: State<'_, SessionManager>) -> Result<(), String> {
+    manager.stop_recording(app).await
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

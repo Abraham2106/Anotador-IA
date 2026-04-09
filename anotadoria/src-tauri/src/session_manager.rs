@@ -32,7 +32,7 @@ impl SessionManager {
     }
 
     /// Inicia la grabación y la emisión de datos de waveform y STT.
-    pub fn start_recording(&self, app_handle: AppHandle) -> Result<(), String> {
+    pub async fn start_recording(&self, app_handle: AppHandle) -> Result<(), String> {
         let mut state = self.state.lock().map_err(|e| e.to_string())?;
         
         if state.audio_handle.is_some() {
@@ -65,8 +65,6 @@ impl SessionManager {
             }
 
             // 2. Pipeline de STT (f32 -> i16 Linear16)
-            // Deepgram espera Linear16 a 16kHz (o el sample rate del stream)
-            // Para simplicidad en este sprint enviamos chunks convertidos.
             let pcm_data = f32_to_i16_pcm(&samples);
             let _ = stt_tx.try_send(pcm_data);
 
@@ -80,7 +78,7 @@ impl SessionManager {
     }
 
     /// Detiene la grabación.
-    pub fn stop_recording(&self, app_handle: AppHandle) -> Result<(), String> {
+    pub async fn stop_recording(&self, app_handle: AppHandle) -> Result<(), String> {
         let mut state = self.state.lock().map_err(|e| e.to_string())?;
         
         if let Some(handle) = state.audio_handle.take() {
