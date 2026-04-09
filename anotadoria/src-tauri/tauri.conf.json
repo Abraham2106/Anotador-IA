@@ -15,7 +15,7 @@
         "label": "main",
         "title": "AnotadorIA",
         "width": 320,
-        "height": 120,
+        "height": 200,
         "alwaysOnTop": true,
         "decorations": false,
         "resizable": false,

@@ -68,6 +68,7 @@ impl SttClient {
             query.append_pair("encoding", "linear16");
             query.append_pair("sample_rate", &sample_rate.to_string());
             query.append_pair("channels", &channels.to_string());
+            query.append_pair("endpointing", "1000"); // Esperar 1 segundo de silencio para finalizar
         }
 
         let (tx, mut rx) = mpsc::channel::<Vec<u8>>(100);

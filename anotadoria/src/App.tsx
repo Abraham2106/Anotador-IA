@@ -46,23 +46,21 @@ function App() {
                 <span className="subtitle">Listo para escuchar</span>
             </div>
         )}
-      </div>
 
-      <div className="bottom-area">
-          <div className="waveform-mini">
+        <div className="recorder-section">
             <WaveformCanvas data={waveform} />
-          </div>
-          
-          <div className="controls">
-            <button 
-              onClick={handleToggleRecording} 
-              disabled={!configLoaded}
-              className={`record-btn ${sessionStatus === 'recording' ? 'active' : ''}`}
-              title={sessionStatus === 'recording' ? 'Stop Recording' : 'Start Recording'}
-            >
-              <div className="inner-circle"></div>
-            </button>
-          </div>
+            
+            <div className="controls">
+                <button 
+                onClick={handleToggleRecording} 
+                disabled={!configLoaded}
+                className={`record-btn ${sessionStatus === 'recording' ? 'active' : ''}`}
+                title={sessionStatus === 'recording' ? 'Stop Recording' : 'Start Recording'}
+                >
+                <div className="inner-circle"></div>
+                </button>
+            </div>
+        </div>
       </div>
     </main>
   );
