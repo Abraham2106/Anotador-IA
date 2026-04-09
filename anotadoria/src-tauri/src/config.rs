@@ -22,7 +22,22 @@ pub struct AppConfig {
 }
 
 pub fn load_config() -> Result<AppConfig, Box<dyn std::error::Error>> {
-    let content = fs::read_to_string("config.toml")?;
+    // Intentar en CWD (raiz del proyecto si se corre con npm run tauri dev)
+    let mut path = std::path::PathBuf::from("config.toml");
+    
+    if !path.exists() {
+        // Intentar en el padre (si el CWD es src-tauri)
+        path = std::path::PathBuf::from("../config.toml");
+    }
+
+    if !path.exists() {
+        return Err(format!("No se encontró config.toml en {:?} ni en el directorio superior. CWD: {:?}", 
+            std::env::current_dir()?.join("config.toml"),
+            std::env::current_dir()?
+        ).into());
+    }
+
+    let content = fs::read_to_string(path)?;
     let config: AppConfig = toml::from_str(&content)?;
     Ok(config)
 }
